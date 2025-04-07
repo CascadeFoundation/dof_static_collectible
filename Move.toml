@@ -6,7 +6,8 @@ authors = ["Cascade Foundation (dos@cascade.foundation)"]
 
 [dependencies]
 BlobUtils = { git = "https://github.com/studio-mirai/blob_utils.git", rev = "main" }
-DosCollection = { git = "https://github.com/CascadeFoundation/dos_collection.git", rev = "main" }
+CascadeProtocol = { git = "https://github.com/cascadefoundation/cascade_protocol.git", rev = "main" }
+DosCollection = { git = "https://github.com/CascadeFoundation/dos_collection.git", rev = "testnet" }
 DosStaticCollectible = { git = "https://github.com/CascadeFoundation/dos_static_collectible.git", rev = "main" }
 
 [addresses]
