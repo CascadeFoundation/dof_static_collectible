@@ -1,0 +1,14 @@
+[package]
+name = "DofStaticCollectible"
+edition = "2024.beta"
+license = "Cascade DOL 1.0"
+authors = ["Cascade Foundation (dos@cascade.foundation)"]
+
+[dependencies]
+BlobUtils = { git = "https://github.com/studio-mirai/blob_utils.git", rev = "main" }
+DosCollection = { git = "https://github.com/CascadeFoundation/dos_collection.git", rev = "main" }
+DosStaticCollectible = { git = "https://github.com/CascadeFoundation/dos_static_collectible.git", rev = "main" }
+
+[addresses]
+dof_static_collectible = "0x0"
+creator = "0x0000000000000000000000000000000000000000000000000000000000000000"
