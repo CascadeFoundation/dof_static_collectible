@@ -22,6 +22,10 @@ public use fun collectible_provenance_hash as StaticCollectibleType.provenance_h
 
 public struct STATIC_COLLECTIBLE_TYPE has drop {}
 
+public struct InitializeCollectionCap has key, store {
+    id: UID,
+}
+
 // A wrapper type around StaticCollectibleType that provides control over a unique type.
 public struct StaticCollectibleType has key, store {
     id: UID,
@@ -45,9 +49,9 @@ const EInvalidCollectionAdminCap: u64 = 0;
 
 #[allow(lint(freeze_wrapped))]
 fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
-    // Create a new Collection<StaticCollectibleType>. This requires a reference to the OTW
-    // to help ensure that another Collection<StaticCollectibleType> cannot be created after this contract
-    // has been deployed. Technically, you could create multiple Collection<StaticCollectibleType> instances
+    // Create a new Collection. This requires a reference to the OTW
+    // to help ensure that another Collection cannot be created after this contract
+    // has been deployed. Technically, you could create multiple Collection instances
     // within this init() function, but why in the world would you want to do that?
     let (collection, collection_admin_cap) = collection::new<
         StaticCollectibleType,
@@ -74,27 +78,26 @@ fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
     display.add(b"image_uri".to_string(), b"{collectible.image_uri}".to_string());
     display.add(b"attributes".to_string(), b"{collectible.attributes}".to_string());
 
+    transfer::public_transfer(collection_admin_cap, ctx.sender());
     transfer::public_transfer(display, ctx.sender());
     transfer::public_transfer(publisher, ctx.sender());
 
     transfer::public_share_object(collection);
-
-    collection_admin_cap.destroy();
 }
 
 //=== Public Function ===
 
 // Create a new PFP.
 public fun new(
-    cap: &CollectionAdminCap<StaticCollectibleType>,
+    cap: &CollectionAdminCap,
     name: String,
     description: String,
     external_url: String,
     provenance_hash: String,
-    collection: &mut Collection<StaticCollectibleType>,
+    collection: &mut Collection,
     ctx: &mut TxContext,
 ): StaticCollectibleType {
-    collection.assert_state_initializing();
+    collection.assert_state_initialized();
 
     let collectible_type = StaticCollectibleType {
         id: object::new(ctx),
@@ -120,7 +123,7 @@ public fun new(
 // This function is useful for situations where a PFP is not held in a shared object that
 // can be accessed by the creator and buyer before the reveal.
 public fun new_revealed(
-    cap: &CollectionAdminCap<StaticCollectibleType>,
+    cap: &CollectionAdminCap,
     name: String,
     description: String,
     external_url: String,
@@ -128,10 +131,10 @@ public fun new_revealed(
     attribute_keys: vector<String>,
     attribute_values: vector<String>,
     image_uri: String,
-    collection: &mut Collection<StaticCollectibleType>,
+    collection: &mut Collection,
     ctx: &mut TxContext,
 ): StaticCollectibleType {
-    collection.assert_state_initializing();
+    collection.assert_state_initialized();
 
     let mut collectible_type = StaticCollectibleType {
         id: object::new(ctx),
@@ -174,11 +177,11 @@ public fun receive<T: key + store>(
 // Reveal a PFP with attributes keys, attribute values, and an image URI.
 public fun reveal(
     self: &mut StaticCollectibleType,
-    cap: &CollectionAdminCap<StaticCollectibleType>,
+    cap: &CollectionAdminCap,
     attribute_keys: vector<String>,
     attribute_values: vector<String>,
     image_uri: String,
-    collection: &mut Collection<StaticCollectibleType>,
+    collection: &mut Collection,
 ) {
     assert!(cap.collection_id() == self.collection_id, EInvalidCollectionAdminCap);
 
