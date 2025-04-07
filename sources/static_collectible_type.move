@@ -48,7 +48,6 @@ const EInvalidCollectionAdminCap: u64 = 0;
 
 //=== Init Function ===
 
-#[allow(lint(freeze_wrapped))]
 fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
     let publisher = package::claim(otw, ctx);
 

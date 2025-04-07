@@ -2,11 +2,13 @@
 
 [move]
 version = 3
-manifest_digest = "03F7B28BE90AAC26761480CE083F2FC057E2642D41FF942C559E79D6D469D1ED"
-deps_digest = "CAFAD8A7CF51067FB4358215BECB86BD100DD64E57C2AC8A7AE7D74B688F5965"
+manifest_digest = "E69B5EC6A7ACB2043F7C1DA446E5D45C8810BE7FD517400BF3A38A579F49F9FA"
+deps_digest = "8227D341C0550A37580C10FA45FE148A465225149C69D179737E0FE454AD6AEC"
 dependencies = [
   { id = "BlobUtils", name = "BlobUtils" },
   { id = "Bridge", name = "Bridge" },
+  { id = "CascadeProtocol", name = "CascadeProtocol" },
+  { id = "DeepBook", name = "DeepBook" },
   { id = "DosCollection", name = "DosCollection" },
   { id = "DosStaticCollectible", name = "DosStaticCollectible" },
   { id = "MoveStdlib", name = "MoveStdlib" },
@@ -16,11 +18,12 @@ dependencies = [
 
 [[move.package]]
 id = "BlobUtils"
-source = { git = "https://github.com/studio-mirai/blob_utils.git", rev = "main", subdir = "" }
+source = { git = "https://github.com/studio-mirai/blob_utils.git", rev = "testnet", subdir = "" }
 
 dependencies = [
   { id = "Bridge", name = "Bridge" },
   { id = "Codec", name = "Codec" },
+  { id = "DeepBook", name = "DeepBook" },
   { id = "MoveStdlib", name = "MoveStdlib" },
   { id = "Sui", name = "Sui" },
   { id = "SuiSystem", name = "SuiSystem" },
@@ -37,22 +40,42 @@ dependencies = [
 ]
 
 [[move.package]]
-id = "Codec"
-source = { git = "https://github.com/sui-potatoes/app.git", rev = "main", subdir = "packages/codec" }
+id = "CascadeProtocol"
+source = { git = "https://github.com/cascadefoundation/cascade_protocol.git", rev = "testnet", subdir = "" }
 
 dependencies = [
   { id = "Bridge", name = "Bridge" },
+  { id = "DeepBook", name = "DeepBook" },
   { id = "MoveStdlib", name = "MoveStdlib" },
   { id = "Sui", name = "Sui" },
   { id = "SuiSystem", name = "SuiSystem" },
 ]
 
 [[move.package]]
+id = "Codec"
+source = { git = "https://github.com/sui-potatoes/app.git", rev = "codec@testnet-v2", subdir = "packages/codec" }
+
+dependencies = [
+  { id = "Sui", name = "Sui" },
+]
+
+[[move.package]]
+id = "DeepBook"
+source = { git = "https://github.com/MystenLabs/sui.git", rev = "04f11afaf5e0", subdir = "crates/sui-framework/packages/deepbook" }
+
+dependencies = [
+  { id = "MoveStdlib", name = "MoveStdlib" },
+  { id = "Sui", name = "Sui" },
+]
+
+[[move.package]]
 id = "DosCollection"
-source = { git = "https://github.com/CascadeFoundation/dos_collection.git", rev = "main", subdir = "" }
+source = { git = "https://github.com/CascadeFoundation/dos_collection.git", rev = "testnet", subdir = "" }
 
 dependencies = [
   { id = "Bridge", name = "Bridge" },
+  { id = "CascadeProtocol", name = "CascadeProtocol" },
+  { id = "DeepBook", name = "DeepBook" },
   { id = "MoveStdlib", name = "MoveStdlib" },
   { id = "Sui", name = "Sui" },
   { id = "SuiSystem", name = "SuiSystem" },
@@ -61,10 +84,12 @@ dependencies = [
 
 [[move.package]]
 id = "DosStaticCollectible"
-source = { git = "https://github.com/CascadeFoundation/dos_static_collectible.git", rev = "main", subdir = "" }
+source = { git = "https://github.com/CascadeFoundation/dos_static_collectible.git", rev = "testnet", subdir = "" }
 
 dependencies = [
   { id = "Bridge", name = "Bridge" },
+  { id = "CascadeProtocol", name = "CascadeProtocol" },
+  { id = "DeepBook", name = "DeepBook" },
   { id = "MoveStdlib", name = "MoveStdlib" },
   { id = "Sui", name = "Sui" },
   { id = "SuiSystem", name = "SuiSystem" },
@@ -93,7 +118,7 @@ dependencies = [
 
 [[move.package]]
 id = "WAL"
-source = { git = "https://github.com/MystenLabs/walrus.git", rev = "main", subdir = "contracts/wal" }
+source = { git = "https://github.com/MystenLabs/walrus.git", rev = "main", subdir = "testnet-contracts/wal" }
 
 dependencies = [
   { id = "Sui", name = "Sui" },
@@ -101,7 +126,7 @@ dependencies = [
 
 [[move.package]]
 id = "Walrus"
-source = { git = "https://github.com/MystenLabs/walrus.git", rev = "main", subdir = "contracts/walrus" }
+source = { git = "https://github.com/MystenLabs/walrus.git", rev = "main", subdir = "testnet-contracts/walrus" }
 
 dependencies = [
   { id = "Sui", name = "Sui" },
@@ -109,7 +134,7 @@ dependencies = [
 ]
 
 [move.toolchain-version]
-compiler-version = "1.46.1"
+compiler-version = "1.46.0"
 edition = "2024.beta"
 flavor = "sui"
 
@@ -117,6 +142,6 @@ flavor = "sui"
 
 [env.testnet]
 chain-id = "4c78adac"
-original-published-id = "0x5151097254f8e0c6e0442510cbc3932c2552bceed60301303170a0a93c1293a0"
-latest-published-id = "0x5151097254f8e0c6e0442510cbc3932c2552bceed60301303170a0a93c1293a0"
+original-published-id = "0x5c3f8b8fd215ea26d02944588318427dc41daf7f05a4be0a2815617d4a3c2a78"
+latest-published-id = "0x5c3f8b8fd215ea26d02944588318427dc41daf7f05a4be0a2815617d4a3c2a78"
 published-version = "1"
