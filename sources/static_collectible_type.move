@@ -107,8 +107,6 @@ public fun new(
     collection: &mut Collection,
     ctx: &mut TxContext,
 ): StaticCollectibleType {
-    collection.assert_state_initialized();
-
     let collectible_type = StaticCollectibleType {
         id: object::new(ctx),
         collection_id: object::id(collection),
@@ -121,6 +119,7 @@ public fun new(
             provenance_hash,
         ),
     };
+
     collection.register_item(
         collection_admin_cap,
         collectible_type.collectible.number(),
@@ -146,8 +145,6 @@ public fun new_revealed(
     collection: &mut Collection,
     ctx: &mut TxContext,
 ): StaticCollectibleType {
-    collection.assert_state_initialized();
-
     let mut collectible_type = StaticCollectibleType {
         id: object::new(ctx),
         collection_id: object::id(collection),
@@ -161,7 +158,6 @@ public fun new_revealed(
         ),
     };
 
-    // Call reveal() directly.
     reveal(
         &mut collectible_type,
         cap,
@@ -180,6 +176,7 @@ public fun new_revealed(
     collectible_type
 }
 
+// Receive an object that's been sent to the collectible.
 public fun receive<T: key + store>(
     self: &mut StaticCollectibleType,
     obj_to_receive: Receiving<T>,
