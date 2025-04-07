@@ -1,11 +1,12 @@
 module dof_static_collectible::static_collectible_type;
 
 use blob_utils::blob_utils::blob_id_b64_to_u256;
+use cascade_protocol::mint_cap::MintCap;
 use dos_collection::collection::{Self, Collection, CollectionAdminCap};
 use dos_static_collectible::static_collectible::{Self, StaticCollectible};
 use std::string::String;
 use sui::display;
-use sui::package;
+use sui::package::{Self, Publisher};
 use sui::transfer::Receiving;
 use sui::vec_map::VecMap;
 
@@ -47,26 +48,7 @@ const EInvalidCollectionAdminCap: u64 = 0;
 
 //=== Init Function ===
 
-#[allow(lint(freeze_wrapped))]
 fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
-    // Create a new Collection. This requires a reference to the OTW
-    // to help ensure that another Collection cannot be created after this contract
-    // has been deployed. Technically, you could create multiple Collection instances
-    // within this init() function, but why in the world would you want to do that?
-    let (collection, collection_admin_cap) = collection::new<
-        StaticCollectibleType,
-        STATIC_COLLECTIBLE_TYPE,
-    >(
-        &otw,
-        COLLECTION_NAME.to_string(),
-        @creator,
-        COLLECTION_DESCRIPTION.to_string(),
-        COLLECTION_EXTERNAL_URL.to_string(),
-        COLLECTION_IMAGE_URI.to_string(),
-        COLLECTION_TOTAL_SUPPLY,
-        ctx,
-    );
-
     let publisher = package::claim(otw, ctx);
 
     let mut display = display::new<StaticCollectibleType>(&publisher, ctx);
@@ -78,18 +60,46 @@ fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
     display.add(b"image_uri".to_string(), b"{collectible.image_uri}".to_string());
     display.add(b"attributes".to_string(), b"{collectible.attributes}".to_string());
 
-    transfer::public_transfer(collection_admin_cap, ctx.sender());
+    let initialize_collection_cap = InitializeCollectionCap {
+        id: object::new(ctx),
+    };
+
     transfer::public_transfer(display, ctx.sender());
     transfer::public_transfer(publisher, ctx.sender());
-
-    transfer::public_share_object(collection);
+    transfer::public_transfer(initialize_collection_cap, ctx.sender());
 }
 
 //=== Public Function ===
 
+// Create a Collection!
+public fun initialize(
+    initialize_collection_cap: InitializeCollectionCap,
+    mint_cap: MintCap<Collection>,
+    publisher: &Publisher,
+    ctx: &mut TxContext,
+): (Collection, CollectionAdminCap) {
+    let (collection, collection_admin_cap) = collection::new<StaticCollectibleType>(
+        mint_cap,
+        publisher,
+        @creator,
+        COLLECTION_NAME.to_string(),
+        COLLECTION_DESCRIPTION.to_string(),
+        COLLECTION_EXTERNAL_URL.to_string(),
+        COLLECTION_IMAGE_URI.to_string(),
+        COLLECTION_TOTAL_SUPPLY,
+        ctx,
+    );
+
+    let InitializeCollectionCap { id } = initialize_collection_cap;
+    id.delete();
+
+    (collection, collection_admin_cap)
+}
+
 // Create a new PFP.
 public fun new(
-    cap: &CollectionAdminCap,
+    collection_admin_cap: &CollectionAdminCap,
+    mint_cap: MintCap<StaticCollectible>,
     name: String,
     description: String,
     external_url: String,
@@ -103,6 +113,7 @@ public fun new(
         id: object::new(ctx),
         collection_id: object::id(collection),
         collectible: static_collectible::new(
+            mint_cap,
             name,
             collection.current_supply() + 1,
             description,
@@ -111,7 +122,7 @@ public fun new(
         ),
     };
     collection.register_item(
-        cap,
+        collection_admin_cap,
         collectible_type.collectible.number(),
         &collectible_type,
     );
@@ -124,6 +135,7 @@ public fun new(
 // can be accessed by the creator and buyer before the reveal.
 public fun new_revealed(
     cap: &CollectionAdminCap,
+    mint_cap: MintCap<StaticCollectible>,
     name: String,
     description: String,
     external_url: String,
@@ -140,6 +152,7 @@ public fun new_revealed(
         id: object::new(ctx),
         collection_id: object::id(collection),
         collectible: static_collectible::new(
+            mint_cap,
             name,
             collection.current_supply() + 1,
             description,
