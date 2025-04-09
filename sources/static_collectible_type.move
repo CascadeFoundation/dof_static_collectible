@@ -113,7 +113,7 @@ public fun new(
         collectible: static_collectible::new(
             mint_cap,
             name,
-            collection.current_supply() + 1,
+            collection.registered_count() + 1,
             description,
             external_url,
             provenance_hash,
@@ -151,7 +151,7 @@ public fun new_revealed(
         collectible: static_collectible::new(
             mint_cap,
             name,
-            collection.current_supply() + 1,
+            collection.registered_count() + 1,
             description,
             external_url,
             provenance_hash,
