@@ -158,6 +158,12 @@ public fun new_revealed(
         ),
     };
 
+    collection.register_item(
+        cap,
+        collectible_type.collectible.number(),
+        &collectible_type,
+    );
+
     reveal(
         &mut collectible_type,
         cap,
@@ -165,12 +171,6 @@ public fun new_revealed(
         attribute_values,
         image_uri,
         collection,
-    );
-
-    collection.register_item(
-        cap,
-        collectible_type.collectible.number(),
-        &collectible_type,
     );
 
     collectible_type
@@ -195,7 +195,7 @@ public fun reveal(
 ) {
     assert!(cap.collection_id() == self.collection_id, EInvalidCollectionAdminCap);
 
-    collection.assert_blob_reserved(blob_id_b64_to_u256(self.collectible.image_uri()));
+    collection.assert_blob_reserved(blob_id_b64_to_u256(image_uri));
     self.collectible.reveal(attribute_keys, attribute_values, image_uri);
 }
 
