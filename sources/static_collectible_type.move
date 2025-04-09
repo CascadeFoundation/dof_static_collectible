@@ -1,6 +1,6 @@
 module dof_static_collectible::static_collectible_type;
 
-use blob_utils::blob_utils::blob_id_b64_to_u256;
+use blob_utils::blob_utils::b64_to_u256;
 use cascade_protocol::mint_cap::MintCap;
 use dos_collection::collection::{Self, Collection, CollectionAdminCap};
 use dos_static_collectible::static_collectible::{Self, StaticCollectible};
@@ -195,7 +195,7 @@ public fun reveal(
 ) {
     assert!(cap.collection_id() == self.collection_id, EInvalidCollectionAdminCap);
 
-    collection.assert_blob_reserved(blob_id_b64_to_u256(image_uri));
+    collection.assert_blob_reserved(b64_to_u256(image_uri));
     self.collectible.reveal(attribute_keys, attribute_values, image_uri);
 }
 
