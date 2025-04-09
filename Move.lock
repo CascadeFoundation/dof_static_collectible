@@ -2,7 +2,7 @@
 
 [move]
 version = 3
-manifest_digest = "E69B5EC6A7ACB2043F7C1DA446E5D45C8810BE7FD517400BF3A38A579F49F9FA"
+manifest_digest = "B5DFC708A6FCFB9D46F76F1E1F5EF778401D679810FB36C730CD0AB23EBBD680"
 deps_digest = "8227D341C0550A37580C10FA45FE148A465225149C69D179737E0FE454AD6AEC"
 dependencies = [
   { id = "BlobUtils", name = "BlobUtils" },
@@ -41,7 +41,7 @@ dependencies = [
 
 [[move.package]]
 id = "CascadeProtocol"
-source = { git = "https://github.com/cascadefoundation/cascade_protocol.git", rev = "testnet", subdir = "" }
+source = { git = "https://github.com/cascadefoundation/cascade_protocol.git", rev = "testnet", subdir = "package" }
 
 dependencies = [
   { id = "Bridge", name = "Bridge" },
