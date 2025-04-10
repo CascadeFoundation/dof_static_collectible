@@ -15,9 +15,10 @@ use sui::vec_map::VecMap;
 public use fun collectible_name as StaticCollectibleType.name;
 public use fun collectible_number as StaticCollectibleType.number;
 public use fun collectible_description as StaticCollectibleType.description;
-public use fun collectible_image_uri as StaticCollectibleType.image_uri;
+public use fun collectible_image as StaticCollectibleType.image;
+public use fun collectible_animation_url as StaticCollectibleType.animation_url;
+public use fun collectible_external_url as StaticCollectibleType.external_url;
 public use fun collectible_attributes as StaticCollectibleType.attributes;
-public use fun collectible_provenance_hash as StaticCollectibleType.provenance_hash;
 
 //=== Structs ===
 
@@ -102,11 +103,14 @@ public fun new(
     mint_cap: MintCap<StaticCollectible>,
     name: String,
     description: String,
+    image: String,
+    animation_url: String,
     external_url: String,
-    provenance_hash: String,
     collection: &mut Collection,
     ctx: &mut TxContext,
 ): StaticCollectibleType {
+    collection.assert_blob_reserved(b64_to_u256(image));
+
     let collectible_type = StaticCollectibleType {
         id: object::new(ctx),
         collection_id: object::id(collection),
@@ -115,8 +119,9 @@ public fun new(
             name,
             collection.registered_count() + 1,
             description,
+            image,
+            animation_url,
             external_url,
-            provenance_hash,
         ),
     };
 
@@ -124,53 +129,6 @@ public fun new(
         collection_admin_cap,
         collectible_type.collectible.number(),
         &collectible_type,
-    );
-
-    collectible_type
-}
-
-// Create a new PFP and reveal it immediately.
-// This function is useful for situations where a PFP is not held in a shared object that
-// can be accessed by the creator and buyer before the reveal.
-public fun new_revealed(
-    cap: &CollectionAdminCap,
-    mint_cap: MintCap<StaticCollectible>,
-    name: String,
-    description: String,
-    external_url: String,
-    provenance_hash: String,
-    attribute_keys: vector<String>,
-    attribute_values: vector<String>,
-    image_uri: String,
-    collection: &mut Collection,
-    ctx: &mut TxContext,
-): StaticCollectibleType {
-    let mut collectible_type = StaticCollectibleType {
-        id: object::new(ctx),
-        collection_id: object::id(collection),
-        collectible: static_collectible::new(
-            mint_cap,
-            name,
-            collection.registered_count() + 1,
-            description,
-            external_url,
-            provenance_hash,
-        ),
-    };
-
-    collection.register_item(
-        cap,
-        collectible_type.collectible.number(),
-        &collectible_type,
-    );
-
-    reveal(
-        &mut collectible_type,
-        cap,
-        attribute_keys,
-        attribute_values,
-        image_uri,
-        collection,
     );
 
     collectible_type
@@ -190,13 +148,9 @@ public fun reveal(
     cap: &CollectionAdminCap,
     attribute_keys: vector<String>,
     attribute_values: vector<String>,
-    image_uri: String,
-    collection: &mut Collection,
 ) {
     assert!(cap.collection_id() == self.collection_id, EInvalidCollectionAdminCap);
-
-    collection.assert_blob_reserved(b64_to_u256(image_uri));
-    self.collectible.reveal(attribute_keys, attribute_values, image_uri);
+    self.collectible.reveal(attribute_keys, attribute_values);
 }
 
 //=== View Functions ===
@@ -217,14 +171,18 @@ public fun collectible_description(self: &StaticCollectibleType): String {
     self.collectible.description()
 }
 
-public fun collectible_image_uri(self: &StaticCollectibleType): String {
-    self.collectible.image_uri()
+public fun collectible_image(self: &StaticCollectibleType): String {
+    self.collectible.image()
+}
+
+public fun collectible_animation_url(self: &StaticCollectibleType): String {
+    self.collectible.animation_url()
+}
+
+public fun collectible_external_url(self: &StaticCollectibleType): String {
+    self.collectible.external_url()
 }
 
 public fun collectible_attributes(self: &StaticCollectibleType): VecMap<String, String> {
     self.collectible.attributes()
-}
-
-public fun collectible_provenance_hash(self: &StaticCollectibleType): String {
-    self.collectible.provenance_hash()
 }
