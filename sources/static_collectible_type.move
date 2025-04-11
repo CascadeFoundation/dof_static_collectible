@@ -134,7 +134,7 @@ public fun new(
 
 public fun new_bulk(
     collection_admin_cap: &CollectionAdminCap,
-    mint_caps: vector<MintCap<StaticCollectible>>,
+    mut mint_caps: vector<MintCap<StaticCollectible>>,
     mut names: vector<String>,
     mut descriptions: vector<String>,
     mut images: vector<String>,
@@ -151,23 +151,32 @@ public fun new_bulk(
     assert!(animation_urls.length() == quantity, EInvalidAnimationUrlsQuantity);
     assert!(external_urls.length() == quantity, EInvalidExternalUrlsQuantity);
 
+    // Reverse the vectors because we use pop_back() when creating the collectibles.
+    names.reverse();
+    descriptions.reverse();
+    images.reverse();
+    animation_urls.reverse();
+    external_urls.reverse();
+
     let mut static_collectible_types: vector<StaticCollectibleType> = vector::empty();
 
-    mint_caps.destroy!(
-        |mint_cap| static_collectible_types.push_back(
-            internal_new(
-                collection_admin_cap,
-                mint_cap,
-                names.pop_back(),
-                descriptions.pop_back(),
-                images.pop_back(),
-                animation_urls.pop_back(),
-                external_urls.pop_back(),
-                collection,
-                ctx,
-            ),
-        ),
-    );
+    while (!mint_caps.is_empty()) {
+        let static_collectible_type = internal_new(
+            collection_admin_cap,
+            mint_caps.pop_back(),
+            names.pop_back(),
+            descriptions.pop_back(),
+            images.pop_back(),
+            animation_urls.pop_back(),
+            external_urls.pop_back(),
+            collection,
+            ctx,
+        );
+
+        static_collectible_types.push_back(static_collectible_type);
+    };
+
+    mint_caps.destroy_empty();
 
     static_collectible_types
 }
@@ -201,10 +210,6 @@ public fun reveal_bulk(
 
     assert!(attribute_keys.length() == quantity, EInvalidAttributeKeysQuantity);
     assert!(attribute_values.length() == quantity, EInvalidAttributeValuesQuantity);
-
-    // Reverse the attribute vectors because do_mut!() calls reverse on the target vector.
-    attribute_keys.reverse();
-    attribute_values.reverse();
 
     static_collectible_types.do_mut!(
         |static_collectible| reveal(
