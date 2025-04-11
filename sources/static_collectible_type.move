@@ -109,12 +109,12 @@ const EInvalidAttributeValuesQuantity: u64 = 6;
 
 public fun new_bulk(
     collection_admin_cap: &CollectionAdminCap,
-    mint_caps: vector<MintCap<StaticCollectible>>,
-    names: vector<String>,
-    descriptions: vector<String>,
-    images: vector<String>,
-    animation_urls: vector<String>,
-    external_urls: vector<String>,
+    mut mint_caps: vector<MintCap<StaticCollectible>>,
+    mut names: vector<String>,
+    mut descriptions: vector<String>,
+    mut images: vector<String>,
+    mut animation_urls: vector<String>,
+    mut external_urls: vector<String>,
     collection: &mut Collection,
     ctx: &mut TxContext,
 ): vector<StaticCollectibleType> {
@@ -126,9 +126,10 @@ public fun new_bulk(
     assert!(animation_urls.length() == quantity, EInvalidAnimationUrlsQuantity);
     assert!(external_urls.length() == quantity, EInvalidExternalUrlsQuantity);
 
-    vector::tabulate!(
-        mint_caps,
-        |_| new(
+    let mut static_collectible_types: vector<StaticCollectibleType> = vector[];
+
+    while (!mint_caps.is_empty()) {
+        let static_collectible_type = new(
             collection_admin_cap,
             mint_caps.pop_back(),
             names.pop_back(),
@@ -138,8 +139,14 @@ public fun new_bulk(
             external_urls.pop_back(),
             collection,
             ctx,
-        ),
-    )
+        );
+
+        static_collectible_types.push_back(static_collectible_type);
+    };
+
+    mint_caps.destroy_empty();
+
+    static_collectible_types
 }
 
 // Create a new PFP.
@@ -156,7 +163,7 @@ public fun new(
 ): StaticCollectibleType {
     collection.assert_blob_reserved(b64_to_u256(image));
 
-    let collectible_type = StaticCollectibleType {
+    let static_collectible_type = StaticCollectibleType {
         id: object::new(ctx),
         collection_id: object::id(collection),
         collectible: static_collectible::new(
@@ -172,11 +179,11 @@ public fun new(
 
     collection.register_item(
         collection_admin_cap,
-        collectible_type.collectible.number(),
-        &collectible_type,
+        static_collectible_type.collectible.number(),
+        &static_collectible_type,
     );
 
-    collectible_type
+    static_collectible_type
 }
 
 // Receive an object that's been sent to the collectible.
@@ -201,8 +208,8 @@ public fun reveal(
 public fun reveal_bulk(
     collection_admin_cap: &CollectionAdminCap,
     static_collectible_types: &mut vector<StaticCollectibleType>,
-    attribute_keys: vector<vector<String>>,
-    attribute_values: vector<vector<String>>,
+    mut attribute_keys: vector<vector<String>>,
+    mut attribute_values: vector<vector<String>>,
 ) {
     let quantity = static_collectible_types.length();
 
