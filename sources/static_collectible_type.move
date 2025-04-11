@@ -132,6 +132,11 @@ public fun new(
     )
 }
 
+// Create multiple collectibles at once by providing vectors of data.
+// Be sure to provided reversed vectors for names, descriptions, images,
+// animation_urls, and external_urls because pop_back() is used to remove
+// elements from the vectors. At the same time, number assignment is done
+// sequentially starting from 1.
 public fun new_bulk(
     collection_admin_cap: &CollectionAdminCap,
     mut mint_caps: vector<MintCap<StaticCollectible>>,
@@ -150,13 +155,6 @@ public fun new_bulk(
     assert!(images.length() == quantity, EInvalidImagesQuantity);
     assert!(animation_urls.length() == quantity, EInvalidAnimationUrlsQuantity);
     assert!(external_urls.length() == quantity, EInvalidExternalUrlsQuantity);
-
-    // Reverse the vectors because we use pop_back() when creating the collectibles.
-    names.reverse();
-    descriptions.reverse();
-    images.reverse();
-    animation_urls.reverse();
-    external_urls.reverse();
 
     let mut static_collectible_types: vector<StaticCollectibleType> = vector::empty();
 
@@ -200,6 +198,10 @@ public fun reveal(
     self.collectible.reveal(attribute_keys, attribute_values);
 }
 
+// Reveal multiple collectibles. Be sure to provide reversed vectors for
+// attribute_keys and attribute_values because pop_back() is used to remove
+// elements from the vectors, and the do_mut!() macro DOES NOT reverse the
+// vectors before applying the reveal function to each collectible.
 public fun reveal_bulk(
     collection_admin_cap: &CollectionAdminCap,
     static_collectible_types: &mut vector<StaticCollectibleType>,
