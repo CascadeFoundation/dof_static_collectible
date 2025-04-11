@@ -107,9 +107,34 @@ const EInvalidExternalUrlsQuantity: u64 = 4;
 const EInvalidAttributeKeysQuantity: u64 = 5;
 const EInvalidAttributeValuesQuantity: u64 = 6;
 
+// Create a new PFP.
+public fun new(
+    collection_admin_cap: &CollectionAdminCap,
+    mint_cap: MintCap<StaticCollectible>,
+    name: String,
+    description: String,
+    image: String,
+    animation_url: String,
+    external_url: String,
+    collection: &mut Collection,
+    ctx: &mut TxContext,
+): StaticCollectibleType {
+    internal_new(
+        collection_admin_cap,
+        mint_cap,
+        name,
+        description,
+        image,
+        animation_url,
+        external_url,
+        collection,
+        ctx,
+    )
+}
+
 public fun new_bulk(
     collection_admin_cap: &CollectionAdminCap,
-    mut mint_caps: vector<MintCap<StaticCollectible>>,
+    mint_caps: vector<MintCap<StaticCollectible>>,
     mut names: vector<String>,
     mut descriptions: vector<String>,
     mut images: vector<String>,
@@ -126,64 +151,25 @@ public fun new_bulk(
     assert!(animation_urls.length() == quantity, EInvalidAnimationUrlsQuantity);
     assert!(external_urls.length() == quantity, EInvalidExternalUrlsQuantity);
 
-    let mut static_collectible_types: vector<StaticCollectibleType> = vector[];
+    let mut static_collectible_types: vector<StaticCollectibleType> = vector::empty();
 
-    while (!mint_caps.is_empty()) {
-        let static_collectible_type = new(
-            collection_admin_cap,
-            mint_caps.pop_back(),
-            names.pop_back(),
-            descriptions.pop_back(),
-            images.pop_back(),
-            animation_urls.pop_back(),
-            external_urls.pop_back(),
-            collection,
-            ctx,
-        );
-
-        static_collectible_types.push_back(static_collectible_type);
-    };
-
-    mint_caps.destroy_empty();
-
-    static_collectible_types
-}
-
-// Create a new PFP.
-public fun new(
-    collection_admin_cap: &CollectionAdminCap,
-    mint_cap: MintCap<StaticCollectible>,
-    name: String,
-    description: String,
-    image: String,
-    animation_url: String,
-    external_url: String,
-    collection: &mut Collection,
-    ctx: &mut TxContext,
-): StaticCollectibleType {
-    collection.assert_blob_reserved(b64_to_u256(image));
-
-    let static_collectible_type = StaticCollectibleType {
-        id: object::new(ctx),
-        collection_id: object::id(collection),
-        collectible: static_collectible::new(
-            mint_cap,
-            name,
-            collection.registered_count() + 1,
-            description,
-            image,
-            animation_url,
-            external_url,
+    mint_caps.destroy!(
+        |mint_cap| static_collectible_types.push_back(
+            internal_new(
+                collection_admin_cap,
+                mint_cap,
+                names.pop_back(),
+                descriptions.pop_back(),
+                images.pop_back(),
+                animation_urls.pop_back(),
+                external_urls.pop_back(),
+                collection,
+                ctx,
+            ),
         ),
-    };
-
-    collection.register_item(
-        collection_admin_cap,
-        static_collectible_type.collectible.number(),
-        &static_collectible_type,
     );
 
-    static_collectible_type
+    static_collectible_types
 }
 
 // Receive an object that's been sent to the collectible.
@@ -262,4 +248,42 @@ public fun collectible_external_url(self: &StaticCollectibleType): String {
 
 public fun collectible_attributes(self: &StaticCollectibleType): VecMap<String, String> {
     self.collectible.attributes()
+}
+
+//=== Private Functions ===
+
+fun internal_new(
+    collection_admin_cap: &CollectionAdminCap,
+    mint_cap: MintCap<StaticCollectible>,
+    name: String,
+    description: String,
+    image: String,
+    animation_url: String,
+    external_url: String,
+    collection: &mut Collection,
+    ctx: &mut TxContext,
+): StaticCollectibleType {
+    collection.assert_blob_reserved(b64_to_u256(image));
+
+    let static_collectible_type = StaticCollectibleType {
+        id: object::new(ctx),
+        collection_id: object::id(collection),
+        collectible: static_collectible::new(
+            mint_cap,
+            name,
+            collection.registered_count() + 1,
+            description,
+            image,
+            animation_url,
+            external_url,
+        ),
+    };
+
+    collection.register_item(
+        collection_admin_cap,
+        static_collectible_type.collectible.number(),
+        &static_collectible_type,
+    );
+
+    static_collectible_type
 }
