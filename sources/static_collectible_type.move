@@ -97,6 +97,51 @@ public fun initialize(
     (collection, collection_admin_cap)
 }
 
+//=== Bulk Functions ===
+
+const EInvalidNamesQuantity: u64 = 0;
+const EInvalidDescriptionsQuantity: u64 = 1;
+const EInvalidImagesQuantity: u64 = 2;
+const EInvalidAnimationUrlsQuantity: u64 = 3;
+const EInvalidExternalUrlsQuantity: u64 = 4;
+const EInvalidAttributeKeysQuantity: u64 = 5;
+const EInvalidAttributeValuesQuantity: u64 = 6;
+
+public fun new_bulk(
+    collection_admin_cap: &CollectionAdminCap,
+    mint_caps: vector<MintCap<StaticCollectible>>,
+    names: vector<String>,
+    descriptions: vector<String>,
+    images: vector<String>,
+    animation_urls: vector<String>,
+    external_urls: vector<String>,
+    collection: &mut Collection,
+    ctx: &mut TxContext,
+): vector<StaticCollectibleType> {
+    let quantity = mint_caps.length();
+
+    assert!(names.length() == quantity, EInvalidNamesQuantity);
+    assert!(descriptions.length() == quantity, EInvalidDescriptionsQuantity);
+    assert!(images.length() == quantity, EInvalidImagesQuantity);
+    assert!(animation_urls.length() == quantity, EInvalidAnimationUrlsQuantity);
+    assert!(external_urls.length() == quantity, EInvalidExternalUrlsQuantity);
+
+    vector::tabulate!(
+        mint_caps,
+        |_| new(
+            collection_admin_cap,
+            mint_caps.pop_back(),
+            names.pop_back(),
+            descriptions.pop_back(),
+            images.pop_back(),
+            animation_urls.pop_back(),
+            external_urls.pop_back(),
+            collection,
+            ctx,
+        ),
+    )
+}
+
 // Create a new PFP.
 public fun new(
     collection_admin_cap: &CollectionAdminCap,
@@ -151,6 +196,31 @@ public fun reveal(
 ) {
     assert!(cap.collection_id() == self.collection_id, EInvalidCollectionAdminCap);
     self.collectible.reveal(attribute_keys, attribute_values);
+}
+
+public fun reveal_bulk(
+    collection_admin_cap: &CollectionAdminCap,
+    static_collectible_types: &mut vector<StaticCollectibleType>,
+    attribute_keys: vector<vector<String>>,
+    attribute_values: vector<vector<String>>,
+) {
+    let quantity = static_collectible_types.length();
+
+    assert!(attribute_keys.length() == quantity, EInvalidAttributeKeysQuantity);
+    assert!(attribute_values.length() == quantity, EInvalidAttributeValuesQuantity);
+
+    // Reverse the attribute vectors because do_mut!() calls reverse on the target vector.
+    attribute_keys.reverse();
+    attribute_values.reverse();
+
+    static_collectible_types.do_mut!(
+        |static_collectible| reveal(
+            static_collectible,
+            collection_admin_cap,
+            attribute_keys.pop_back(),
+            attribute_values.pop_back(),
+        ),
+    );
 }
 
 //=== View Functions ===
