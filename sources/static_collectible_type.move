@@ -1,6 +1,6 @@
 module dof_static_collectible::static_collectible_type;
 
-use blob_utils::blob_utils::b64_to_u256;
+use blob_utils::blob_utils;
 use cascade_protocol::mint_cap::MintCap;
 use dos_collection::collection::{Self, Collection, CollectionAdminCap};
 use dos_static_collectible::static_collectible::{Self, StaticCollectible};
@@ -270,7 +270,7 @@ fun internal_new(
     collection: &mut Collection,
     ctx: &mut TxContext,
 ): StaticCollectibleType {
-    collection.assert_blob_reserved(b64_to_u256(image));
+    collection.assert_blob_reserved(blob_utils::to_u256(image));
 
     let static_collectible_type = StaticCollectibleType {
         id: object::new(ctx),
