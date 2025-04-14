@@ -1,12 +1,12 @@
 module dof_static_collectible::static_collectible_type;
 
 use blob_utils::blob_utils;
-use cascade_protocol::mint_cap::MintCap;
 use dos_collection::collection::{Self, Collection, CollectionAdminCap};
 use dos_static_collectible::static_collectible::{Self, StaticCollectible};
 use std::string::String;
+use sui::address;
 use sui::display;
-use sui::package::{Self, Publisher};
+use sui::package;
 use sui::transfer::Receiving;
 use sui::vec_map::VecMap;
 
@@ -37,6 +37,7 @@ public struct StaticCollectibleType has key, store {
 
 //=== Constants ===
 
+const COLLECTION_CREATOR_ADDRESS: vector<u8> = b"<COLLECTION_CREATOR_ADDRESS>";
 const COLLECTION_NAME: vector<u8> = b"<COLLECTION_NAME>";
 const COLLECTION_DESCRIPTION: vector<u8> = b"<COLLECTION_DESCRIPTION>";
 const COLLECTION_EXTERNAL_URL: vector<u8> = b"<COLLECTION_EXTERNAL_URL>";
@@ -49,6 +50,7 @@ const EInvalidCollectionAdminCap: u64 = 0;
 
 //=== Init Function ===
 
+#[allow(lint(share_owned))]
 fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
     let publisher = package::claim(otw, ctx);
 
@@ -61,28 +63,9 @@ fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
     display.add(b"image_uri".to_string(), b"{collectible.image_uri}".to_string());
     display.add(b"attributes".to_string(), b"{collectible.attributes}".to_string());
 
-    let initialize_collection_cap = InitializeCollectionCap {
-        id: object::new(ctx),
-    };
-
-    transfer::public_transfer(display, ctx.sender());
-    transfer::public_transfer(publisher, ctx.sender());
-    transfer::public_transfer(initialize_collection_cap, ctx.sender());
-}
-
-//=== Public Function ===
-
-// Create a Collection!
-public fun initialize(
-    initialize_collection_cap: InitializeCollectionCap,
-    mint_cap: MintCap<Collection>,
-    publisher: &Publisher,
-    ctx: &mut TxContext,
-): (Collection, CollectionAdminCap) {
     let (collection, collection_admin_cap) = collection::new<StaticCollectibleType>(
-        mint_cap,
-        publisher,
-        @creator,
+        &publisher,
+        address::from_bytes(COLLECTION_CREATOR_ADDRESS),
         COLLECTION_NAME.to_string(),
         COLLECTION_DESCRIPTION.to_string(),
         COLLECTION_EXTERNAL_URL.to_string(),
@@ -91,13 +74,14 @@ public fun initialize(
         ctx,
     );
 
-    let InitializeCollectionCap { id } = initialize_collection_cap;
-    id.delete();
+    transfer::public_transfer(collection_admin_cap, ctx.sender());
+    transfer::public_transfer(display, ctx.sender());
+    transfer::public_transfer(publisher, ctx.sender());
 
-    (collection, collection_admin_cap)
+    transfer::public_share_object(collection);
 }
 
-//=== Bulk Functions ===
+//=== Public Function ===
 
 const EInvalidNamesQuantity: u64 = 0;
 const EInvalidDescriptionsQuantity: u64 = 1;
@@ -110,7 +94,6 @@ const EInvalidAttributeValuesQuantity: u64 = 6;
 // Create a new PFP.
 public fun new(
     collection_admin_cap: &CollectionAdminCap,
-    mint_cap: MintCap<StaticCollectible>,
     name: String,
     description: String,
     image: String,
@@ -121,7 +104,6 @@ public fun new(
 ): StaticCollectibleType {
     internal_new(
         collection_admin_cap,
-        mint_cap,
         name,
         description,
         image,
@@ -139,7 +121,7 @@ public fun new(
 // sequentially starting from 1.
 public fun new_bulk(
     collection_admin_cap: &CollectionAdminCap,
-    mut mint_caps: vector<MintCap<StaticCollectible>>,
+    quantity: u64,
     mut names: vector<String>,
     mut descriptions: vector<String>,
     mut images: vector<String>,
@@ -148,20 +130,16 @@ public fun new_bulk(
     collection: &mut Collection,
     ctx: &mut TxContext,
 ): vector<StaticCollectibleType> {
-    let quantity = mint_caps.length();
-
     assert!(names.length() == quantity, EInvalidNamesQuantity);
     assert!(descriptions.length() == quantity, EInvalidDescriptionsQuantity);
     assert!(images.length() == quantity, EInvalidImagesQuantity);
     assert!(animation_urls.length() == quantity, EInvalidAnimationUrlsQuantity);
     assert!(external_urls.length() == quantity, EInvalidExternalUrlsQuantity);
 
-    let mut static_collectible_types: vector<StaticCollectibleType> = vector::empty();
-
-    while (!mint_caps.is_empty()) {
-        let static_collectible_type = internal_new(
+    let static_collectible_types = vector::tabulate!(
+        quantity,
+        |_| internal_new(
             collection_admin_cap,
-            mint_caps.pop_back(),
             names.pop_back(),
             descriptions.pop_back(),
             images.pop_back(),
@@ -169,12 +147,8 @@ public fun new_bulk(
             external_urls.pop_back(),
             collection,
             ctx,
-        );
-
-        static_collectible_types.push_back(static_collectible_type);
-    };
-
-    mint_caps.destroy_empty();
+        ),
+    );
 
     static_collectible_types
 }
@@ -261,7 +235,6 @@ public fun collectible_attributes(self: &StaticCollectibleType): VecMap<String, 
 
 fun internal_new(
     collection_admin_cap: &CollectionAdminCap,
-    mint_cap: MintCap<StaticCollectible>,
     name: String,
     description: String,
     image: String,
@@ -276,7 +249,6 @@ fun internal_new(
         id: object::new(ctx),
         collection_id: object::id(collection),
         collectible: static_collectible::new(
-            mint_cap,
             name,
             collection.registered_count() + 1,
             description,

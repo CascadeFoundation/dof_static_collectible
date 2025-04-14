@@ -6,15 +6,12 @@ authors = ["Cascade Foundation (dos@cascade.foundation)"]
 
 [dependencies]
 BlobUtils = { git = "https://github.com/studio-mirai/blob_utils.git", rev = "testnet" }
-CascadeProtocol = { git = "https://github.com/cascadefoundation/cascade_protocol.git", subdir = "package",  rev = "testnet" }
 DosCollection = { git = "https://github.com/CascadeFoundation/dos_collection.git", rev = "testnet" }
 DosStaticCollectible = { git = "https://github.com/CascadeFoundation/dos_static_collectible.git", rev = "testnet" }
 
 [addresses]
 dof_static_collectible = "0x0"
-creator = "0x7c6361ed400db0c1c3b98233a8210e34a781f993a70be28263a6f1c2e6c06809"
 
-# CascadeProtocol
 # DosStaticCollectible
 # DosCollection
 # DofStaticCollectible
