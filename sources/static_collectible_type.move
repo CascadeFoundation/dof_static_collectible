@@ -7,7 +7,7 @@ use std::string::String;
 use std::type_name;
 use sui::address;
 use sui::display;
-use sui::package;
+use sui::package::{Self, Publisher};
 use sui::transfer::Receiving;
 use sui::vec_map::VecMap;
 
@@ -95,6 +95,7 @@ const EInvalidAttributeValuesQuantity: u64 = 6;
 // Create a new PFP.
 public fun new(
     collection_admin_cap: &CollectionAdminCap,
+    publisher: Publisher,
     name: String,
     description: String,
     image: String,
@@ -105,6 +106,7 @@ public fun new(
 ): StaticCollectibleType {
     internal_new(
         collection_admin_cap,
+        publisher,
         name,
         description,
         image,
@@ -122,6 +124,7 @@ public fun new(
 // sequentially starting from 1.
 public fun new_bulk(
     collection_admin_cap: &CollectionAdminCap,
+    publisher: Publisher,
     quantity: u64,
     mut names: vector<String>,
     mut descriptions: vector<String>,
@@ -141,6 +144,7 @@ public fun new_bulk(
         quantity,
         |_| internal_new(
             collection_admin_cap,
+            publisher,
             names.pop_back(),
             descriptions.pop_back(),
             images.pop_back(),
@@ -236,6 +240,7 @@ public fun collectible_attributes(self: &StaticCollectibleType): VecMap<String, 
 
 fun internal_new(
     collection_admin_cap: &CollectionAdminCap,
+    publisher: Publisher,
     name: String,
     description: String,
     image: String,
@@ -249,7 +254,8 @@ fun internal_new(
     let static_collectible_type = StaticCollectibleType {
         id: object::new(ctx),
         collection_id: object::id(collection),
-        collectible: static_collectible::new(
+        collectible: static_collectible::new<StaticCollectible>(
+            publisher: publisher,
             name,
             collection.registered_count() + 1,
             description,
