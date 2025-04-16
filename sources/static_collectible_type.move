@@ -248,7 +248,7 @@ fun internal_new(
     let static_collectible_type = StaticCollectibleType {
         id: object::new(ctx),
         collection_id: object::id(collection),
-        collectible: static_collectible::new(
+        collectible: static_collectible::new<StaticCollectible>(
             name,
             collection.registered_count() + 1,
             description,
