@@ -255,7 +255,7 @@ fun internal_new(
         id: object::new(ctx),
         collection_id: object::id(collection),
         collectible: static_collectible::new<StaticCollectible>(
-            publisher: publisher,
+            publisher,
             name,
             collection.registered_count() + 1,
             description,
