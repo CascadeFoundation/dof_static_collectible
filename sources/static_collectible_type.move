@@ -201,6 +201,12 @@ public fun reveal_bulk(
     );
 }
 
+public fun destroy(self: StaticCollectibleType) {
+    let StaticCollectibleType { id, collectible, .. } = self;
+    collectible.destroy();
+    id.delete();
+}
+
 //=== View Functions ===
 
 public fun collection_id(self: &StaticCollectibleType): ID {
