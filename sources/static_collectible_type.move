@@ -4,6 +4,7 @@ use blob_utils::blob_utils;
 use dos_collection::collection::{Self, Collection, CollectionAdminCap};
 use dos_static_collectible::static_collectible::{Self, StaticCollectible};
 use std::string::String;
+use std::type_name;
 use sui::address;
 use sui::display;
 use sui::package;
@@ -243,18 +244,19 @@ fun internal_new(
     collection: &mut Collection,
     ctx: &mut TxContext,
 ): StaticCollectibleType {
-    collection.assert_blob_reserved(blob_utils::to_u256(image));
+    collection.assert_blob_reserved(blob_utils::blob_id_to_u256(image));
 
     let static_collectible_type = StaticCollectibleType {
         id: object::new(ctx),
         collection_id: object::id(collection),
-        collectible: static_collectible::new<StaticCollectible>(
+        collectible: static_collectible::new(
             name,
             collection.registered_count() + 1,
             description,
             image,
             animation_url,
             external_url,
+            type_name::get<StaticCollectible>(),
         ),
     };
 
