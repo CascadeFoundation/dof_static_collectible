@@ -10,23 +10,9 @@ use sui::package::{Self, Publisher};
 use sui::transfer::Receiving;
 use sui::vec_map::VecMap;
 
-//=== Aliases ===
-
-public use fun collectible_name as StaticCollectibleType.name;
-public use fun collectible_number as StaticCollectibleType.number;
-public use fun collectible_description as StaticCollectibleType.description;
-public use fun collectible_image as StaticCollectibleType.image;
-public use fun collectible_animation_url as StaticCollectibleType.animation_url;
-public use fun collectible_external_url as StaticCollectibleType.external_url;
-public use fun collectible_attributes as StaticCollectibleType.attributes;
-
 //=== Structs ===
 
 public struct STATIC_COLLECTIBLE_TYPE has drop {}
-
-public struct InitializeCollectionCap has key, store {
-    id: UID,
-}
 
 // A wrapper type around StaticCollectibleType that provides control over a unique type.
 public struct StaticCollectibleType has key, store {
@@ -59,8 +45,9 @@ fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
     display.add(b"name".to_string(), b"{collectible.name}".to_string());
     display.add(b"number".to_string(), b"{collectible.number}".to_string());
     display.add(b"description".to_string(), b"{collectible.description}".to_string());
+    display.add(b"image".to_string(), b"{collectible.image}".to_string());
+    display.add(b"animation_url".to_string(), b"{collectible.animation_url}".to_string());
     display.add(b"external_url".to_string(), b"{collectible.external_url}".to_string());
-    display.add(b"image_uri".to_string(), b"{collectible.image_uri}".to_string());
     display.add(b"attributes".to_string(), b"{collectible.attributes}".to_string());
 
     let (collection, collection_admin_cap) = collection::new<StaticCollectibleType>(
@@ -213,31 +200,31 @@ public fun collection_id(self: &StaticCollectibleType): ID {
     self.collection_id
 }
 
-public fun collectible_number(self: &StaticCollectibleType): u64 {
+public fun number(self: &StaticCollectibleType): u64 {
     self.collectible.number()
 }
 
-public fun collectible_name(self: &StaticCollectibleType): String {
+public fun name(self: &StaticCollectibleType): String {
     self.collectible.name()
 }
 
-public fun collectible_description(self: &StaticCollectibleType): String {
+public fun description(self: &StaticCollectibleType): String {
     self.collectible.description()
 }
 
-public fun collectible_image(self: &StaticCollectibleType): String {
+public fun image(self: &StaticCollectibleType): String {
     self.collectible.image()
 }
 
-public fun collectible_animation_url(self: &StaticCollectibleType): String {
+public fun animation_url(self: &StaticCollectibleType): String {
     self.collectible.animation_url()
 }
 
-public fun collectible_external_url(self: &StaticCollectibleType): String {
+public fun external_url(self: &StaticCollectibleType): String {
     self.collectible.external_url()
 }
 
-public fun collectible_attributes(self: &StaticCollectibleType): VecMap<String, String> {
+public fun attributes(self: &StaticCollectibleType): VecMap<String, String> {
     self.collectible.attributes()
 }
 
