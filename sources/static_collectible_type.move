@@ -95,7 +95,7 @@ const EInvalidAttributeValuesQuantity: u64 = 6;
 // Create a new PFP.
 public fun new(
     collection_admin_cap: &CollectionAdminCap,
-    publisher: Publisher,
+    publisher: &Publisher,
     name: String,
     description: String,
     image: String,
@@ -124,7 +124,7 @@ public fun new(
 // sequentially starting from 1.
 public fun new_bulk(
     collection_admin_cap: &CollectionAdminCap,
-    publisher: Publisher,
+    publisher: &Publisher,
     quantity: u64,
     mut names: vector<String>,
     mut descriptions: vector<String>,
@@ -240,7 +240,7 @@ public fun collectible_attributes(self: &StaticCollectibleType): VecMap<String, 
 
 fun internal_new(
     collection_admin_cap: &CollectionAdminCap,
-    publisher: Publisher,
+    publisher: &Publisher,
     name: String,
     description: String,
     image: String,
