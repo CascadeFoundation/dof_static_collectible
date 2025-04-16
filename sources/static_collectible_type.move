@@ -262,7 +262,6 @@ fun internal_new(
             image,
             animation_url,
             external_url,
-            type_name::get<StaticCollectible>(),
         ),
     };
 
