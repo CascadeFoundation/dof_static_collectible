@@ -4,7 +4,6 @@ use blob_utils::blob_utils;
 use dos_collection::collection::{Self, Collection, CollectionAdminCap};
 use dos_static_collectible::static_collectible::{Self, StaticCollectible};
 use std::string::String;
-use std::type_name;
 use sui::address;
 use sui::display;
 use sui::package::{Self, Publisher};
