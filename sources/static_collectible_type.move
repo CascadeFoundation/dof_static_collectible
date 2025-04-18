@@ -49,6 +49,7 @@ fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
     display.add(b"animation_url".to_string(), b"{collectible.animation_url}".to_string());
     display.add(b"external_url".to_string(), b"{collectible.external_url}".to_string());
     display.add(b"attributes".to_string(), b"{collectible.attributes}".to_string());
+    display.update_version();
 
     let (collection, collection_admin_cap) = collection::new<StaticCollectibleType>(
         &publisher,
