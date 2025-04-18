@@ -32,7 +32,7 @@ const COLLECTION_TOTAL_SUPPLY: u64 = 0;
 
 //=== Errors ===
 
-const EInvalidCollectionAdminCap: u64 = 0;
+const EInvalidCollectionAdminCap: u64 = 10000;
 
 //=== Init Function ===
 
