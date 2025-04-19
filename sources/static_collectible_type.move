@@ -41,15 +41,6 @@ fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
     let publisher = package::claim(otw, ctx);
 
     let mut display = display::new<StaticCollectibleType>(&publisher, ctx);
-    display.add(b"collection_id".to_string(), b"{collection_id}".to_string());
-    display.add(b"name".to_string(), b"{collectible.name}".to_string());
-    display.add(b"number".to_string(), b"{collectible.number}".to_string());
-    display.add(b"description".to_string(), b"{collectible.description}".to_string());
-    display.add(b"image".to_string(), b"{collectible.image}".to_string());
-    display.add(b"animation_url".to_string(), b"{collectible.animation_url}".to_string());
-    display.add(b"external_url".to_string(), b"{collectible.external_url}".to_string());
-    display.add(b"attributes".to_string(), b"{collectible.attributes}".to_string());
-    display.update_version();
 
     let (collection, collection_admin_cap) = collection::new<StaticCollectibleType>(
         &publisher,
