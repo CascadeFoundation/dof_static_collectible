@@ -85,6 +85,7 @@ public fun new(
     internal_new(
         collection_admin_cap,
         publisher,
+        collection.creator(),
         name,
         description,
         image,
@@ -123,6 +124,7 @@ public fun new_bulk(
         |_| internal_new(
             collection_admin_cap,
             publisher,
+            collection.creator(),
             names.pop_back(),
             descriptions.pop_back(),
             images.pop_back(),
@@ -190,6 +192,10 @@ public fun destroy(self: StaticCollectibleType) {
 
 public fun collection_id(self: &StaticCollectibleType): ID {
     self.collection_id
+}
+
+public fun creator(self: &StaticCollectibleType): address {
+    self.collectible.creator()
 }
 
 public fun number(self: &StaticCollectibleType): u64 {
