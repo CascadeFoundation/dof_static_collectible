@@ -231,6 +231,7 @@ public fun attributes(self: &StaticCollectibleType): VecMap<String, String> {
 fun internal_new(
     collection_admin_cap: &CollectionAdminCap,
     publisher: &Publisher,
+    creator: address,
     name: String,
     description: String,
     image: String,
@@ -246,6 +247,7 @@ fun internal_new(
         collection_id: object::id(collection),
         collectible: static_collectible::new<StaticCollectibleType>(
             publisher,
+            creator,
             name,
             collection.registered_count() + 1,
             description,
