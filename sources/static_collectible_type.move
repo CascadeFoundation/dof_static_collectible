@@ -76,7 +76,7 @@ public fun new(
     publisher: &Publisher,
     name: String,
     description: String,
-    image: String,
+    image_uri: String,
     animation_url: String,
     external_url: String,
     collection: &mut Collection,
@@ -88,7 +88,7 @@ public fun new(
         collection.creator(),
         name,
         description,
-        image,
+        image_uri,
         animation_url,
         external_url,
         collection,
@@ -97,7 +97,7 @@ public fun new(
 }
 
 // Create multiple collectibles at once by providing vectors of data.
-// Be sure to provided reversed vectors for names, descriptions, images,
+// Be sure to provided reversed vectors for names, descriptions, image_uris,
 // animation_urls, and external_urls because pop_back() is used to remove
 // elements from the vectors. At the same time, number assignment is done
 // sequentially starting from 1.
@@ -107,7 +107,7 @@ public fun new_bulk(
     quantity: u64,
     mut names: vector<String>,
     mut descriptions: vector<String>,
-    mut images: vector<String>,
+    mut image_uris: vector<String>,
     mut animation_urls: vector<String>,
     mut external_urls: vector<String>,
     collection: &mut Collection,
@@ -115,7 +115,7 @@ public fun new_bulk(
 ): vector<StaticCollectibleType> {
     assert!(names.length() == quantity, EInvalidNamesQuantity);
     assert!(descriptions.length() == quantity, EInvalidDescriptionsQuantity);
-    assert!(images.length() == quantity, EInvalidImagesQuantity);
+    assert!(image_uris.length() == quantity, EInvalidImagesQuantity);
     assert!(animation_urls.length() == quantity, EInvalidAnimationUrlsQuantity);
     assert!(external_urls.length() == quantity, EInvalidExternalUrlsQuantity);
 
@@ -127,7 +127,7 @@ public fun new_bulk(
             collection.creator(),
             names.pop_back(),
             descriptions.pop_back(),
-            images.pop_back(),
+            image_uris.pop_back(),
             animation_urls.pop_back(),
             external_urls.pop_back(),
             collection,
@@ -146,7 +146,7 @@ public fun receive<T: key + store>(
     transfer::public_receive(&mut self.id, obj_to_receive)
 }
 
-// Reveal a PFP with attributes keys, attribute values, and an image URI.
+// Reveal a PFP with attributes keys, attribute values, and an image_uri URI.
 public fun reveal(
     self: &mut StaticCollectibleType,
     cap: &CollectionAdminCap,
@@ -210,8 +210,8 @@ public fun description(self: &StaticCollectibleType): String {
     self.collectible.description()
 }
 
-public fun image(self: &StaticCollectibleType): String {
-    self.collectible.image()
+public fun image_uri(self: &StaticCollectibleType): String {
+    self.collectible.image_uri()
 }
 
 public fun animation_url(self: &StaticCollectibleType): String {
@@ -234,13 +234,13 @@ fun internal_new(
     creator: address,
     name: String,
     description: String,
-    image: String,
+    image_uri: String,
     animation_url: String,
     external_url: String,
     collection: &mut Collection,
     ctx: &mut TxContext,
 ): StaticCollectibleType {
-    collection.assert_blob_reserved(blob_utils::blob_id_to_u256(image));
+    collection.assert_blob_reserved(blob_utils::blob_id_to_u256(image_uri));
 
     let static_collectible_type = StaticCollectibleType {
         id: object::new(ctx),
@@ -251,7 +251,7 @@ fun internal_new(
             name,
             collection.registered_count() + 1,
             description,
-            image,
+            image_uri,
             animation_url,
             external_url,
         ),
