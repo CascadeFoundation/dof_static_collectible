@@ -40,7 +40,7 @@ const EInvalidCollectionAdminCap: u64 = 10000;
 fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
     let publisher = package::claim(otw, ctx);
 
-    let mut display = display::new<StaticCollectibleType>(&publisher, ctx);
+    let display = display::new<StaticCollectibleType>(&publisher, ctx);
 
     let (collection, collection_admin_cap) = collection::new<StaticCollectibleType>(
         &publisher,
