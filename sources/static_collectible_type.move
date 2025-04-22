@@ -1,7 +1,9 @@
 module dof_static_collectible::static_collectible_type;
 
 use blob_utils::blob_utils;
-use dos_collection::collection::{Self, Collection, CollectionAdminCap};
+use dos_collection::collection::{Self, assert_is_authorized};
+use dos_collection::collection_manager::{CollectionManager, CollectionManagerAdminCap};
+use dos_collection::collection_metadata::CollectionMetadata;
 use dos_static_collectible::static_collectible::{Self, StaticCollectible};
 use std::string::String;
 use sui::address;
@@ -30,10 +32,6 @@ const COLLECTION_EXTERNAL_URL: vector<u8> = b"<COLLECTION_EXTERNAL_URL>";
 const COLLECTION_IMAGE_URI: vector<u8> = b"<COLLECTION_IMAGE_URI>";
 const COLLECTION_TOTAL_SUPPLY: u64 = 0;
 
-//=== Errors ===
-
-const EInvalidCollectionAdminCap: u64 = 10000;
-
 //=== Init Function ===
 
 #[allow(lint(share_owned))]
@@ -42,7 +40,9 @@ fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
 
     let display = display::new<StaticCollectibleType>(&publisher, ctx);
 
-    let (collection, collection_admin_cap) = collection::new<StaticCollectibleType>(
+    let (collection_metadata, collection_manager, collection_manager_admin_cap) = collection::new<
+        StaticCollectibleType,
+    >(
         &publisher,
         address::from_bytes(COLLECTION_CREATOR_ADDRESS),
         COLLECTION_NAME.to_string(),
@@ -53,26 +53,29 @@ fun init(otw: STATIC_COLLECTIBLE_TYPE, ctx: &mut TxContext) {
         ctx,
     );
 
-    transfer::public_transfer(collection_admin_cap, ctx.sender());
+    transfer::public_transfer(collection_manager_admin_cap, ctx.sender());
     transfer::public_transfer(display, ctx.sender());
     transfer::public_transfer(publisher, ctx.sender());
 
-    transfer::public_share_object(collection);
+    transfer::public_freeze_object(collection_metadata);
+    transfer::public_share_object(collection_manager);
 }
 
 //=== Public Function ===
 
-const EInvalidNamesQuantity: u64 = 0;
-const EInvalidDescriptionsQuantity: u64 = 1;
-const EInvalidImagesQuantity: u64 = 2;
-const EInvalidAnimationUrlsQuantity: u64 = 3;
-const EInvalidExternalUrlsQuantity: u64 = 4;
-const EInvalidAttributeKeysQuantity: u64 = 5;
-const EInvalidAttributeValuesQuantity: u64 = 6;
+const EInvalidNamesQuantity: u64 = 10000;
+const EInvalidNumbersQuantity: u64 = 10001;
+const EInvalidDescriptionsQuantity: u64 = 10002;
+const EInvalidImagesQuantity: u64 = 10003;
+const EInvalidAnimationUrlsQuantity: u64 = 10004;
+const EInvalidExternalUrlsQuantity: u64 = 10005;
+const EInvalidAttributeKeysQuantity: u64 = 10006;
+const EInvalidAttributeValuesQuantity: u64 = 10007;
+const EInvalidCollectionMetadata: u64 = 10008;
 
 // Create a new PFP.
 public fun new(
-    collection_admin_cap: &CollectionAdminCap,
+    cap: &CollectionManagerAdminCap,
     publisher: &Publisher,
     name: String,
     number: u64,
@@ -80,20 +83,25 @@ public fun new(
     image_uri: String,
     animation_url: String,
     external_url: String,
-    collection: &mut Collection,
+    collection_manager: &mut CollectionManager,
+    collection_metadata: &CollectionMetadata,
     ctx: &mut TxContext,
 ): StaticCollectibleType {
+    // Assert the CollectionManagerAdminCap, CollectionManager, and CollectionMetadata are linked to each other.
+    assert_is_authorized(cap, collection_manager, collection_metadata);
+
     internal_new(
-        collection_admin_cap,
+        cap,
         publisher,
-        collection.creator(),
+        collection_metadata.creator(),
         name,
         number,
         description,
         image_uri,
         animation_url,
         external_url,
-        collection,
+        collection_manager,
+        collection_metadata,
         ctx,
     )
 }
@@ -104,7 +112,7 @@ public fun new(
 // elements from the vectors. At the same time, number assignment is done
 // sequentially starting from 1.
 public fun new_bulk(
-    collection_admin_cap: &CollectionAdminCap,
+    cap: &CollectionManagerAdminCap,
     publisher: &Publisher,
     quantity: u64,
     mut names: vector<String>,
@@ -113,10 +121,15 @@ public fun new_bulk(
     mut image_uris: vector<String>,
     mut animation_urls: vector<String>,
     mut external_urls: vector<String>,
-    collection: &mut Collection,
+    collection_manager: &mut CollectionManager,
+    collection_metadata: &CollectionMetadata,
     ctx: &mut TxContext,
 ): vector<StaticCollectibleType> {
+    // Assert the CollectionManagerAdminCap, CollectionManager, and CollectionMetadata are linked to each other.
+    assert_is_authorized(cap, collection_manager, collection_metadata);
+
     assert!(names.length() == quantity, EInvalidNamesQuantity);
+    assert!(numbers.length() == quantity, EInvalidNumbersQuantity);
     assert!(descriptions.length() == quantity, EInvalidDescriptionsQuantity);
     assert!(image_uris.length() == quantity, EInvalidImagesQuantity);
     assert!(animation_urls.length() == quantity, EInvalidAnimationUrlsQuantity);
@@ -125,16 +138,17 @@ public fun new_bulk(
     let static_collectible_types = vector::tabulate!(
         quantity,
         |_| internal_new(
-            collection_admin_cap,
+            cap,
             publisher,
-            collection.creator(),
+            collection_metadata.creator(),
             names.pop_back(),
             numbers.pop_back(),
             descriptions.pop_back(),
             image_uris.pop_back(),
             animation_urls.pop_back(),
             external_urls.pop_back(),
-            collection,
+            collection_manager,
+            collection_metadata,
             ctx,
         ),
     );
@@ -153,12 +167,14 @@ public fun receive<T: key + store>(
 // Reveal a PFP with attributes keys, attribute values, and an image_uri URI.
 public fun reveal(
     self: &mut StaticCollectibleType,
-    cap: &CollectionAdminCap,
+    cap: &CollectionManagerAdminCap,
     attribute_keys: vector<String>,
     attribute_values: vector<String>,
+    collection_manager: &mut CollectionManager,
+    collection_metadata: &CollectionMetadata,
 ) {
-    assert!(cap.collection_id() == self.collection_id, EInvalidCollectionAdminCap);
-    self.collectible.reveal(attribute_keys, attribute_values);
+    assert_is_authorized(cap, collection_manager, collection_metadata);
+    internal_reveal(self, attribute_keys, attribute_values, collection_metadata);
 }
 
 // Reveal multiple collectibles. Be sure to provide reversed vectors for
@@ -166,22 +182,26 @@ public fun reveal(
 // elements from the vectors, and the do_mut!() macro DOES NOT reverse the
 // vectors before applying the reveal function to each collectible.
 public fun reveal_bulk(
-    collection_admin_cap: &CollectionAdminCap,
+    cap: &CollectionManagerAdminCap,
     static_collectible_types: &mut vector<StaticCollectibleType>,
     mut attribute_keys: vector<vector<String>>,
     mut attribute_values: vector<vector<String>>,
+    collection_manager: &mut CollectionManager,
+    collection_metadata: &CollectionMetadata,
 ) {
+    assert_is_authorized(cap, collection_manager, collection_metadata);
+
     let quantity = static_collectible_types.length();
 
     assert!(attribute_keys.length() == quantity, EInvalidAttributeKeysQuantity);
     assert!(attribute_values.length() == quantity, EInvalidAttributeValuesQuantity);
 
     static_collectible_types.do_mut!(
-        |static_collectible| reveal(
+        |static_collectible| internal_reveal(
             static_collectible,
-            collection_admin_cap,
             attribute_keys.pop_back(),
             attribute_values.pop_back(),
+            collection_metadata,
         ),
     );
 }
@@ -233,7 +253,7 @@ public fun attributes(self: &StaticCollectibleType): VecMap<String, String> {
 //=== Private Functions ===
 
 fun internal_new(
-    collection_admin_cap: &CollectionAdminCap,
+    cap: &CollectionManagerAdminCap,
     publisher: &Publisher,
     creator: address,
     name: String,
@@ -242,14 +262,15 @@ fun internal_new(
     image_uri: String,
     animation_url: String,
     external_url: String,
-    collection: &mut Collection,
+    collection_manager: &mut CollectionManager,
+    collection_metadata: &CollectionMetadata,
     ctx: &mut TxContext,
 ): StaticCollectibleType {
-    collection.assert_blob_reserved(blob_utils::blob_id_to_u256(image_uri));
+    collection_manager.assert_blob_reserved(blob_utils::blob_id_to_u256(image_uri));
 
     let static_collectible_type = StaticCollectibleType {
         id: object::new(ctx),
-        collection_id: object::id(collection),
+        collection_id: object::id(collection_metadata),
         collectible: static_collectible::new<StaticCollectibleType>(
             publisher,
             creator,
@@ -262,11 +283,21 @@ fun internal_new(
         ),
     };
 
-    collection.register_item(
-        collection_admin_cap,
+    collection_manager.register_item(
+        cap,
         static_collectible_type.collectible.number(),
         &static_collectible_type,
     );
 
     static_collectible_type
+}
+
+fun internal_reveal(
+    self: &mut StaticCollectibleType,
+    attribute_keys: vector<String>,
+    attribute_values: vector<String>,
+    collection_metadata: &CollectionMetadata,
+) {
+    assert!(self.collection_id == object::id(collection_metadata), EInvalidCollectionMetadata);
+    self.collectible.reveal(attribute_keys, attribute_values);
 }
