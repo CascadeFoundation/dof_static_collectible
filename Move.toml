@@ -5,9 +5,9 @@ license = "Cascade DOL 1.0"
 authors = ["Cascade Foundation (dos@cascade.foundation)"]
 
 [dependencies]
-BlobUtils = { git = "https://github.com/studio-mirai/blob_utils.git", rev = "testnet" }
-DosCollection = { git = "https://github.com/CascadeFoundation/dos_collection.git", rev = "testnet" }
-DosStaticCollectible = { git = "https://github.com/CascadeFoundation/dos_static_collectible.git", rev = "testnet" }
+BlobUtils = { git = "https://github.com/studio-mirai/blob_utils.git", rev = "mainnet" }
+DosCollection = { git = "https://github.com/CascadeFoundation/dos_collection.git", rev = "mainnet" }
+DosStaticCollectible = { git = "https://github.com/CascadeFoundation/dos_static_collectible.git", rev = "mainnet" }
 
 [addresses]
 dof_static_collectible = "0x0"
