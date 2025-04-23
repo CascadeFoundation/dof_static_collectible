@@ -214,6 +214,14 @@ public fun destroy(self: StaticCollectibleType) {
 
 //=== View Functions ===
 
+public fun animation_url(self: &StaticCollectibleType): String {
+    self.collectible.animation_url()
+}
+
+public fun attributes(self: &StaticCollectibleType): VecMap<String, String> {
+    self.collectible.attributes()
+}
+
 public fun collection_id(self: &StaticCollectibleType): ID {
     self.collection_id
 }
@@ -222,32 +230,24 @@ public fun creator(self: &StaticCollectibleType): address {
     self.collectible.creator()
 }
 
-public fun number(self: &StaticCollectibleType): u64 {
-    self.collectible.number()
-}
-
-public fun name(self: &StaticCollectibleType): String {
-    self.collectible.name()
-}
-
 public fun description(self: &StaticCollectibleType): String {
     self.collectible.description()
-}
-
-public fun image_uri(self: &StaticCollectibleType): String {
-    self.collectible.image_uri()
-}
-
-public fun animation_url(self: &StaticCollectibleType): String {
-    self.collectible.animation_url()
 }
 
 public fun external_url(self: &StaticCollectibleType): String {
     self.collectible.external_url()
 }
 
-public fun attributes(self: &StaticCollectibleType): VecMap<String, String> {
-    self.collectible.attributes()
+public fun image_uri(self: &StaticCollectibleType): String {
+    self.collectible.image_uri()
+}
+
+public fun name(self: &StaticCollectibleType): String {
+    self.collectible.name()
+}
+
+public fun number(self: &StaticCollectibleType): u64 {
+    self.collectible.number()
 }
 
 //=== Private Functions ===
